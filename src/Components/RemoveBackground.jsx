@@ -1,14 +1,19 @@
 import { useState } from "react";
 import { API_KEY } from "../../config";
+import { styled } from "@mui/material/styles";
+import Button from "@mui/material/Button";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 const RemoveBackground = () => {
   const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
 
   const handleFileChange = async (event) => {
     const file = event.target.files[0];
 
     if (file) {
       try {
+        setError(null);
         const form = new FormData();
         form.append("image_file", file);
 
@@ -29,10 +34,12 @@ const RemoveBackground = () => {
             "data:image/png;base64," + arrayBufferToBase64(buffer);
           setResult(dataUrl);
         } else {
+          setError(`Error: ${response.status} - ${response.statusText}`);
           console.error("Error:", response.status, response.statusText);
         }
       } catch (error) {
         console.error("Error:", error);
+        setError("Error processing the image. Please try again.");
       }
     }
   };
@@ -46,11 +53,48 @@ const RemoveBackground = () => {
     document.body.removeChild(link);
   };
 
+  const VisuallyHiddenInput = styled("input")({
+    clip: "rect(0 0 0 0)",
+    clipPath: "inset(50%)",
+    height: 1,
+    overflow: "hidden",
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    whiteSpace: "nowrap",
+    width: 1,
+  });
+
   return (
     <div>
-      {result && <img src={result} alt="Result" />}
-      {result && <button onClick={handleDownload}>Download Image</button>}
-      <input type="file" name="" id="" onChange={handleFileChange} />
+      <p className="text-xl text-center p-3">
+        This API task uses the Clipdrop API&apos;s - Remove Background API
+      </p>
+      <p className="uppercase text-2xl text-center font-semibold">Remove Background</p>
+      {error && <p className="text-red-500 text-center">{error}</p>}
+      {result && (
+        <img
+          src={result}
+          alt="Result"
+          className="border mx-auto w-[50%] h-[50%] mt-3"
+        />
+      )}
+      <div className="flex items-center justify-center mt-5 gap-4">
+        <Button
+          component="label"
+          variant="contained"
+          startIcon={<CloudUploadIcon />}
+          onChange={handleFileChange}
+        >
+          Upload File
+          <VisuallyHiddenInput type="file" />
+        </Button>
+        {result && (
+          <Button onClick={handleDownload} variant="outlined">
+            Download Image
+          </Button>
+        )}
+      </div>
     </div>
   );
 };
